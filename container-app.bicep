@@ -1,4 +1,4 @@
-//https://docs.microsoft.com/en-us/azure/container-apps/azure-resource-manager-api-spec
+
 param location string
 param app string
 param env string
