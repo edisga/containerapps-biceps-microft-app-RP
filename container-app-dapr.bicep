@@ -2,10 +2,15 @@ param location string
 param app string
 param env string
 param containerAppEnvId string
-param containerImage string
+param containerimage string
+param storageaccount string
+
+resource sa 'Microsoft.Storage/storageAccounts@2019-06-01' existing = {
+  name: storageaccount
+}
 
 resource container 'Microsoft.App/containerApps@2022-01-01-preview' = {
-  name: app
+  name: containerimage
   location: location
   tags: {
     app: app
@@ -14,19 +19,16 @@ resource container 'Microsoft.App/containerApps@2022-01-01-preview' = {
   kind: 'containerapp'
   properties: {
     configuration: {
-      activeRevisionsMode: 'single'
       ingress: {
-        allowInsecure: true
         external: true
-        targetPort: 80
-        transport: 'auto'
+        targetPort: 3000
       }
     }
     managedEnvironmentId: containerAppEnvId
     template: {
       containers: [
         {
-          image: containerImage
+          image: 'dapriosamples/hello-k8s-node:latest'
           name: 'string'
           resources: {
             cpu: 1
@@ -35,8 +37,15 @@ resource container 'Microsoft.App/containerApps@2022-01-01-preview' = {
         }
       ]
       scale: {
-        maxReplicas: 3
-        minReplicas: 0
+        maxReplicas: 1
+        minReplicas: 1
+      }
+      dapr:{
+        enabled: true
+        appPort: 3000
+        appId: containerimage
+        secrets: 'storage-account-name=${sa.name},storage-account-key=${sa.listKeys().keys[0].value}'
+        components: 'components.yaml'
       }
     }
   }
